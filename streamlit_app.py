@@ -5,9 +5,83 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from fetchapi import fetch_opensky_snapshot, fetch_rdu_departures, fetch_aviation_API_airlines_endpoint
 import requests
-from dotenv import load_dotenv
+
 import os
-import pandas as pd
+
+# always read the .env next to this file
+try:
+    from dotenv import load_dotenv
+except Exception:
+    def load_dotenv(*a, **k): pass
+
+from pathlib import Path
+load_dotenv(dotenv_path=Path(__file__).with_name(".env"), override=True)
+
+@st.cache_data(ttl=600)
+def _get_counts_cached(icao: str):
+    return hourly_counts_for_previous_day(icao.strip().upper())
+
+
+
+    u = os.getenv("OPENSKY_USER", "")
+    p = os.getenv("OPENSKY_PASS", "")
+    # Show safely without revealing actual secrets
+    st.write({
+        "has_user": bool(u),
+        "has_pass": bool(p),
+        "user_repr": repr(u[:3] + "***"),  # mask
+        "pass_len": len(p)
+    })
+    # Check latin-1 encodability
+    try:
+        u.encode("latin-1"); p.encode("latin-1")
+        st.write({"latin1_ok": True})
+    except UnicodeEncodeError:
+        st.error("OPENSKY_USER / OPENSKY_PASS contain non-Latin-1 characters. Please use ASCII only.")
+
+
+# --- Compatibility wrapper: DO NOT modify teammate's code below ---
+# This replaces the imported function with a safe wrapper that always returns {"data": list}
+try:
+    _orig_fetch_airlines = fetch_aviation_API_airlines_endpoint  # imported from fetchapi.py
+except Exception:
+    _orig_fetch_airlines = None
+
+if _orig_fetch_airlines is not None:
+    def fetch_aviation_API_airlines_endpoint(*args, **kwargs):
+        """
+        Safe wrapper around the original function.
+        Always normalizes the payload to {"data": <list>}.
+        Never raises if the upstream returns an unexpected shape.
+        """
+        try:
+            payload = _orig_fetch_airlines(*args, **kwargs)
+        except Exception as e:
+            # Soft-fail: surface info to the UI but keep the app running
+            try:
+                import streamlit as st  # guard: in case this module is imported elsewhere
+                st.info(f"Aviation API error: {type(e).__name__}: {e}")
+            except Exception:
+                pass
+            return {"data": []}
+
+        # Normalize common shapes → {"data": list}
+        if isinstance(payload, dict):
+            if isinstance(payload.get("data"), list):
+                return payload
+            for alt in ("results", "airlines", "items"):
+                if isinstance(payload.get(alt), list):
+                    return {"data": payload[alt]}
+            # If it's a dict-of-dicts, convert values to a list
+            if payload and all(isinstance(v, dict) for v in payload.values()):
+                return {"data": list(payload.values())}
+            return {"data": []}
+        if isinstance(payload, list):
+            return {"data": payload}
+        # Anything else → empty dataset
+        return {"data": []}
+        
+
 
 st.set_page_config(page_title="Flight Volume by Country (OpenSky)", layout="wide")
 st.title("🌍 Global Flight Snapshot (via OpenSky Network)")
@@ -197,9 +271,83 @@ if run_rdu:
         st.subheader("🏢 Top 10 Airlines from RDU (last 6h)")
         st.bar_chart(top_airlines.set_index("Airline"))
 
+# ============== >>> RDU HOURLY HEATMAP START >>> ==============
+# ---------- RDU Previous-Day Hourly Heatmap (OpenSky) ----------
+st.header("🔥 RDU Hourly Arrivals/Departures — Previous Day")
 
-#### ----------- Airline Profile Comparison (AviationAPI - Ethan Dominic's Code) ----------- ####
+# Optional: one-click to clear cache
+if st.button("♻️ Clear RDU cache"):
+    st.cache_data.clear()
+    st.success("Cache cleared.")
+
+colA, colB = st.columns([1, 1])
+with colA:
+    # ICAO code; KRDU is Raleigh–Durham
+    airport_icao = st.text_input("Airport ICAO", value=DEFAULT_AIRPORT, help="KRDU = Raleigh–Durham")
+with colB:
+    # Trigger to fetch and render the heatmap
+    go_heatmap = st.button("Generate RDU Heatmap")
+
+if go_heatmap:
+    with st.spinner("Fetching previous-day arrivals & departures from OpenSky..."):
+        counts_df, prev_day = _get_counts_cached(airport_icao)
+
+    # Show the day and timezone for clarity
+    st.caption(f"Local day: {prev_day.isoformat()} · Timezone: America/New_York")
+
+    # Display the raw hourly table
+    st.dataframe(counts_df, use_container_width=True)
+
+    # Diagnostics: totals + last OpenSky HTTP status histogram
+    st.write({
+        "total_arrivals": int(counts_df['arrivals'].sum()),
+        "total_departures": int(counts_df['departures'].sum()),
+        "opensky_status_hist": get_last_status_hist()  # e.g., {200: 24} / {429: 6} / {401: 4}
+    })
+
+    # Build a 2x24 matrix for heatmap: row0=Arrivals, row1=Departures
+    data = [counts_df['arrivals'].tolist(), counts_df['departures'].tolist()]
+
+    # Draw heatmap using matplotlib (no custom colors per your constraints)
+    fig, ax = plt.subplots(figsize=(12, 2.8))
+    im = ax.imshow(data, aspect="auto")
+
+    # Axis labels and ticks
+    ax.set_yticks([0, 1])
+    ax.set_yticklabels(["Arrivals", "Departures"])
+    ax.set_xticks(range(24))
+    ax.set_xticklabels([str(h) for h in range(24)])
+    ax.set_xlabel("Hour of Day (Local)")
+    ax.set_title(f"{airport_icao.strip().upper()} — Hourly Arrivals/Departures on {prev_day.isoformat()}")
+
+    # Optional: annotate cell counts
+    for r in range(2):
+        for c in range(24):
+            ax.text(c, r, str(data[r][c]), ha="center", va="center", fontsize=8)
+
+    # Colorbar and render
+    fig.colorbar(im, ax=ax, fraction=0.02, pad=0.02)
+    st.pyplot(fig)
+# ============== <<< RDU HOURLY HEATMAP END <<< ==============
+
+
+
+#### ----------- Airline Profile Comparison (AviationStack API - Ethan Dominic's Code) ----------- ####
 airline_data = fetch_aviation_API_airlines_endpoint()
+if isinstance(airline_data, list):
+    airline_data = {"data": airline_data}
+elif isinstance(airline_data, dict):
+    if not isinstance(airline_data.get("data"), list):
+        # Try common alternate keys from APIs
+        for alt in ("results", "airlines", "items"):
+            if isinstance(airline_data.get(alt), list):
+                airline_data = {"data": airline_data[alt]}
+                break
+        else:
+            # Fallback: empty dataset if no suitable list found
+            airline_data = {"data": []}
+else:
+    airline_data = {"data": []}
 
 def get_airline_feature_dict(feature_type, cast_type):
     """
@@ -256,7 +404,10 @@ comparison_option = st.radio(
     "Pick the type of comparison you would like to see: ",
     ("Fleet Size", "Fleet Average Age", "Founding Year")
 )
-
+# --- Final guard: ensure airline_data has a "data" list right before use ---
+if not isinstance(airline_data, dict):
+    airline_data = {}
+airline_data.setdefault("data", [])
 countries_of_origin = pd.Series(get_airline_feature_dict("country_name", "str"))
 country_filters = countries_of_origin.unique().tolist()
 country_filters.append("All Countries") # Add option for user to see all countries
