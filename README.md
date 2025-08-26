@@ -20,10 +20,6 @@ pip package manager
 
 Clone this repository or copy the source files:
 
-
-git clone https://github.com/yourusername/opensky-flight-dashboard.git
-cd opensky-flight-dashboard
-
 git clone https://github.com/Shreya-Mendi/Bootcamp_project.git
 cd Bootcamp_project/
 
