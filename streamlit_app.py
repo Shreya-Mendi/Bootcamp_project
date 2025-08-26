@@ -195,6 +195,11 @@ if run_rdu:
 #### ----------- Airline Profile Comparison (AviationAPI - Ethan Dominic's Code) ----------- ####
 airline_data = fetch_aviation_API_airlines_endpoint()
 
+# Safety guard: no key → don't crash
+if not isinstance(airline_data, dict) or "data" not in airline_data:
+    st.warning("AviationStack data unavailable; showing empty comparison.")
+    airline_data = {"data": []}
+
 def get_airline_feature_dict(feature_type, cast_type):
     """
     Return a dictionary of airline names along with their values for the specified feature type.
