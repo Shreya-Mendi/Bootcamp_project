@@ -5,10 +5,9 @@ It fetches a real-time snapshot of active flights (~1,800 aircraft globally) and
 Number of active flights
 Top 30 countries by active flights (bar chart)
 Scatter map of global flight positions
-<<<<<<< HEAD
-=======
+
 Top 10 Airlines departed from RDU in the last 6 hours
->>>>>>> 754ce3af99ee183159a79d664cbb5a6814d977a0
+
 
 📦 Prerequisites
 
@@ -21,13 +20,13 @@ pip package manager
 
 Clone this repository or copy the source files:
 
-<<<<<<< HEAD
+
 git clone https://github.com/yourusername/opensky-flight-dashboard.git
 cd opensky-flight-dashboard
-=======
+
 git clone https://github.com/Shreya-Mendi/Bootcamp_project.git
 cd Bootcamp_project/
->>>>>>> 754ce3af99ee183159a79d664cbb5a6814d977a0
+
 
 (Optional but recommended) Create a virtual environment:
 
@@ -67,21 +66,13 @@ View:
 Total number of flights in the snapshot
 Top 30 countries by active flights (bar chart)
 Global scatter map of flight positions
-<<<<<<< HEAD
 
-=======
+
+
 Click "Fetch RDU Data"
 View:
 Bar Graph of Top 10 Airlines from RDU
->>>>>>> 754ce3af99ee183159a79d664cbb5a6814d977a0
 
-📜 Requirements
-
-Here’s a sample requirements.txt you can use:
-requests
-pandas
-streamlit
-matplotlib
 
 ⚠️ Notes & Limitations
 
@@ -99,9 +90,5 @@ Snapshot is limited to ~1800 flights by the free tier
 👉 View it on Hugging Face Spaces:
 🔗 https://huggingface.co/spaces/ShreyaMendi/Skyline 
 
-🛠️ Example Output
-
-Top 30 Countries by Active Flights
-A horizontal bar chart ranking countries with the most flights in the snapshot.
 Global Flight Positions (Scatter Map)
 A scatter plot of aircraft positions by latitude/longitude.
