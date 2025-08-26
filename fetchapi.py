@@ -5,7 +5,6 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 import time
-from dotenv import load_dotenv
 
 OPENSKY_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_URL_DEPARTURES = "https://opensky-network.org/api/flights/departure"
@@ -33,6 +32,7 @@ def fetch_opensky_snapshot() -> pd.DataFrame:
     df = pd.DataFrame(states, columns=cols)
     df["last_contact"] = pd.to_datetime(df["last_contact"], unit="s")
     df.attrs["timestamp"] = datetime.utcfromtimestamp(timestamp)
+    print(df.head(10))
     return df
 
 def fetch_aviation_API_airlines_endpoint():

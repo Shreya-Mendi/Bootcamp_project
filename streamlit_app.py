@@ -4,9 +4,6 @@ import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 from fetchapi import fetch_opensky_snapshot, fetch_rdu_departures, fetch_aviation_API_airlines_endpoint
-import requests
-from dotenv import load_dotenv
-import os
 import pandas as pd
 
 st.set_page_config(page_title="Flight Volume by Country (OpenSky)", layout="wide")
@@ -60,8 +57,8 @@ if run:
         ax2.set_ylabel("Latitude")
         st.pyplot(fig2)
 
-    with st.expander("Raw Country Data"):
-        st.dataframe(summary)
+    # with st.expander("Raw Country Data"):
+    #     st.dataframe(summary)
 
 
     ############# Omkar's Code #############
@@ -161,7 +158,7 @@ else:
 
 
 
-## ---------- RDU Specific Analysis ---------- ##
+## ---------- RDU Specific Analysis (Arnav) ---------- ##
 st.header("🛫 Raleigh-Durham (RDU) Airport Stats")
 run_rdu = st.button("Fetch RDU Stats")
 
