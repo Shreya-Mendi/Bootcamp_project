@@ -195,7 +195,7 @@ if run_rdu:
         st.bar_chart(top_airlines.set_index("Airline"))
 
 
-#### ----------- Airline Profile Comparison (AviationAPI - Ethan Dominic's Code) ----------- ####
+#### ----------- Airline Profile Comparison (AviationStack API - Ethan Dominic's Code) ----------- ####
 airline_data = fetch_aviation_API_airlines_endpoint()
 
 def get_airline_feature_dict(feature_type, cast_type):
