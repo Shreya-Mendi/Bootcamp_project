@@ -55,13 +55,18 @@ cd Bootcamp_project/
 
 
 ### 📂 Project Structure
+├── .gitignore # Files to ignore
+
+├── airplane.jpg # Airplane picture in README
+
 ├── cli_demo.py           # Fetches flight snapshot from OpenSky API and airline data from aviationstack API
 
-├── streamlit_app.py      # Streamlit application
+├── README.md             # Project documentation
 
 ├── requirements.txt      # Python dependencies
 
-└── README.md             # Project documentation
+└── streamlit_app.py      # Streamlit application
+
 
 
 ## 🚀 Usage
