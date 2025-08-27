@@ -1,6 +1,8 @@
 # streamlit_app.py
 import os, sys; sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+# streamlit_app.py
+
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -58,8 +60,103 @@ if run:
         ax2.set_ylabel("Latitude")
         st.pyplot(fig2)
 
+    # with st.expander("Raw Country Data"):
+    #     st.dataframe(summary)
+
+
+    ############# Omkar's Code #############
+    st.header("📊 Other Analyses (OpenSky)")
+
+    col1, col2, col3 = st.columns(3)
+
+    # 1. Flights by Altitude Band
+    with col1:
+        if "baro_altitude" in df.columns:
+            # Convert meters to feet
+            df["alt_ft"] = df["baro_altitude"] * 3.28084  
+
+            bins = [-1000, 10000, 20000, 30000, 60000]   # feet
+            labels = ["<10k", "10–20k", "20–30k", "30k+"]
+            df["alt_band"] = pd.cut(df["alt_ft"], bins=bins, labels=labels)
+
+            alt_counts = df["alt_band"].value_counts().reindex(labels, fill_value=0)
+
+            fig_alt, ax_alt = plt.subplots(figsize=(4,3))
+            ax_alt.bar(alt_counts.index, alt_counts.values, color="mediumseagreen", alpha=0.8)
+            ax_alt.set_title("Flights by Altitude Band (feet)")
+            ax_alt.set_xlabel("Altitude band")
+            ax_alt.set_ylabel("Aircraft")
+            st.pyplot(fig_alt, use_container_width=False)
+
+
+    # 2. Top Airlines by Callsign Prefix
+    with col2:
+        if "callsign" in df.columns:
+            # Clean callsigns
+            cs = df["callsign"].astype(str).str.upper().str.strip()
+
+            # Extract exactly 3 leading letters (ICAO airline code)
+            prefix = cs.str.extract(r'^([A-Z]{3})', expand=False)
+
+            # Tag N-registered private aircraft
+            n_reg_mask = prefix.isna() & cs.str.match(r'^N[0-9A-Z]+', na=False)
+            prefix = prefix.where(~n_reg_mask, "Private/GA")
+
+            # Fill remaining blanks
+            prefix = prefix.fillna("No Name")
+
+            # Map common airline codes → names
+            airline_map = {
+                "AAL": "American Airlines",
+                "DAL": "Delta Air Lines",
+                "UAL": "United Airlines",
+                "SWA": "Southwest Airlines",
+                "JBU": "Jet Blue Airways",
+                "FFT": "Frontier Airlines",
+                "NKS": "Spirit Airlines",
+                "ASA": "Alaska Airlines",
+                "UPS": "UPS Airlines",
+                "FDX": "Fed Ex Express",
+                "BAW": "British Airways",
+                "DLH": "Lufthansa",
+                "AFR": "Air France",
+                "KLM": "KLM Royal Dutch Airlines",
+                "UAE": "Emirates",
+                "Private/GA": "Private/GA",
+                "No Name": "No Name",
+            }
+
+            # Replace codes with names where possible
+            airline_name = prefix.map(airline_map).fillna(prefix)
+
+            airline_counts = airline_name.value_counts().head(15)
+
+            fig_airline, ax_airline = plt.subplots(figsize=(8, 6))
+            ax_airline.barh(airline_counts.index, airline_counts.values, color="slateblue", alpha=0.85)
+            ax_airline.set_title("Top 15 Airlines by Callsign")
+            ax_airline.set_xlabel("Aircraft")
+            ax_airline.invert_yaxis()
+            st.pyplot(fig_airline, use_container_width=False)
+
+
+    # 3. Flights by Broad Region (Pie)
+    with col3:
+        if {"latitude","longitude"}.issubset(df.columns):
+            df["region"] = pd.cut(
+                df["longitude"],
+                bins=[-180, -30, 60, 180],
+                labels=["Americas", "Europe/Africa", "Asia-Pacific"]
+            )
+            region_counts = df["region"].value_counts()
+
+            fig_region, ax_region = plt.subplots(figsize=(3.5,3.5))
+            ax_region.pie(region_counts.values, labels=region_counts.index, autopct="%1.0f%%")
+            ax_region.set_title("Regions")
+            st.pyplot(fig_region, use_container_width=False)
 else:
     st.info("Click 'Fetch Live Flights' to view global snapshot.")
+
+
 
 ## ---------- RDU Specific Analysis (Arnav) ---------- ##
 st.header("🛫 Raleigh-Durham (RDU) Airport Stats")
@@ -97,26 +194,20 @@ if run_rdu:
         st.subheader("🏢 Top 10 Airlines from RDU (last 6h)")
         st.bar_chart(top_airlines.set_index("Airline"))
 
+
 #### ----------- Airline Profile Comparison (AviationAPI - Ethan Dominic's Code) ----------- ####
 airline_data = fetch_aviation_API_airlines_endpoint()
-
-# Local patch: keep running if AviationStack missing/invalid
-try:
-    _is_missing = not isinstance(airline_data, dict) or "data" not in airline_data
-except Exception:
-    _is_missing = True
-if _is_missing:
-    st.warning("AviationStack unavailable; showing empty comparison for local demo.")
-    airline_data = {"data": []}
-
-# Graceful fallback when API key is missing/invalid or rate-limited
-if not isinstance(airline_data, dict) or "data" not in airline_data:
-    st.warning("AviationStack data unavailable (no/invalid AVIATION_KEY or rate limit). Comparison charts will be empty but the page remains usable.")
-    
 
 def get_airline_feature_dict(feature_type, cast_type):
     """
     Return a dictionary of airline names along with their values for the specified feature type.
+    
+    Parameters:
+    - feature_type (str): The specified feature type to extract (e.g., "fleet_size", "fleet_average_age", "date_founded").
+    - cast_type (str): The type to cast the feature value to ("int", "float", or "str")
+    
+    Returns:
+    - dict: A dictionary whose keys are airline names and values are the corresponding feature values.
     """
     airline_feature_dict = {}
     for i in range(len(airline_data["data"])):
@@ -134,6 +225,15 @@ def get_airline_feature_dict(feature_type, cast_type):
 def plot_bar_graph(feature_series, title, ylabel, bottom_ylim=0):
     """
     Plot a bar graph for the given feature Series.
+    
+    Parameters:
+    - feature_series (pd.Series): A pandas Series where the index is airline names and the values are the feature values.
+    - title (str): The desired title of the graph.
+    - ylabel (str): The desired label for the y-axis.
+    - bottom_ylim (int, optional): The minimum limit for the y-axis. Defaults to 0.
+
+    Returns:
+    - None: Displays the bar graph using Streamlit.
     """
     fig, ax = plt.subplots()
     bars = ax.bar(feature_series.index.astype(str), feature_series.values)
@@ -156,7 +256,7 @@ comparison_option = st.radio(
 
 countries_of_origin = pd.Series(get_airline_feature_dict("country_name", "str"))
 country_filters = countries_of_origin.unique().tolist()
-country_filters.append("All Countries")
+country_filters.append("All Countries") # Add option for user to see all countries
 country_filter_option = st.radio(
     "Pick a country of origin to filter by: ",
     (country_filters)
@@ -164,37 +264,36 @@ country_filter_option = st.radio(
 
 if country_filter_option == "All Countries":
     if comparison_option == "Fleet Size":
-        fleet_sizes = (pd.Series(get_airline_feature_dict("fleet_size", "int"))).dropna()
+        fleet_sizes = (pd.Series(get_airline_feature_dict("fleet_size", "int"))).dropna() # Remove airlines with no fleet size data
         sorted_fleet_sizes = fleet_sizes.sort_values(ascending=True)
-        top10_sorted_fleet_sizes = sorted_fleet_sizes.tail(10)
+        top10_sorted_fleet_sizes = sorted_fleet_sizes.tail(10) # Get the top 10 largest airlines by fleet size
         plot_bar_graph(top10_sorted_fleet_sizes, "Airline Fleet Sizes", "Fleet Size")
     elif comparison_option == "Fleet Average Age":
-        fleet_avg_ages = (pd.Series(get_airline_feature_dict("fleet_average_age", "float"))).dropna()
+        fleet_avg_ages = (pd.Series(get_airline_feature_dict("fleet_average_age", "float"))).dropna() # Remove airlines with no fleet average age data
         sorted_fleet_avg_ages = fleet_avg_ages.sort_values(ascending=True)
-        top10_sorted_fleet_avg_ages = sorted_fleet_avg_ages.head(10)
+        top10_sorted_fleet_avg_ages = sorted_fleet_avg_ages.head(10) # Get the top 10 youngest airlines by fleet average age
         plot_bar_graph(top10_sorted_fleet_avg_ages, "Airline Fleet Average Ages", "Fleet Average Age")
     elif comparison_option == "Founding Year":
-        founding_years = (pd.Series(get_airline_feature_dict("date_founded", "int"))).dropna()
+        founding_years = (pd.Series(get_airline_feature_dict("date_founded", "int"))).dropna() # Remove airlines with no founding year data
         sorted_founding_years = founding_years.sort_values(ascending=True)
-        top10_sorted_founding_years = sorted_founding_years.head(10)
-        plot_bar_graph(top10_sorted_founding_years, "Airline Founding Years", "Founding Year", bottom_ylim=1900)
+        top10_sorted_founding_years = sorted_founding_years.head(10) # Get the top 10 oldest airlines by founding year
+        plot_bar_graph(top10_sorted_founding_years, "Airline Founding Years", "Founding Year", bottom_ylim=1900) # Set y-axis minimum so years before 1900 since no airlines were founded before then
 else:
     if comparison_option == "Fleet Size":
-        fleet_sizes = (pd.Series(get_airline_feature_dict("fleet_size", "int"))).dropna()
-        filtered_fleet_sizes = fleet_sizes[countries_of_origin == country_filter_option]
+        fleet_sizes = (pd.Series(get_airline_feature_dict("fleet_size", "int"))).dropna() # Remove airlines with no fleet size data
+        filtered_fleet_sizes = fleet_sizes[countries_of_origin == country_filter_option] # Ensure only airlines from the selected country are included
         sorted_fleet_sizes = filtered_fleet_sizes.sort_values(ascending=True)
         plot_bar_graph(sorted_fleet_sizes, "Airline Fleet Sizes", "Fleet Size")
     elif comparison_option == "Fleet Average Age":
-        fleet_avg_ages = (pd.Series(get_airline_feature_dict("fleet_average_age", "float"))).dropna()
-        filtered_fleet_avg_ages = fleet_avg_ages[countries_of_origin == country_filter_option]
+        fleet_avg_ages = (pd.Series(get_airline_feature_dict("fleet_average_age", "float"))).dropna() # Remove airlines with no fleet average age data
+        filtered_fleet_avg_ages = fleet_avg_ages[countries_of_origin == country_filter_option] # Ensure only airlines from the selected country are included
         sorted_fleet_avg_ages = filtered_fleet_avg_ages.sort_values(ascending=True)
         plot_bar_graph(sorted_fleet_avg_ages, "Airline Fleet Average Ages", "Fleet Average Age")
     elif comparison_option == "Founding Year":
-        founding_years = (pd.Series(get_airline_feature_dict("date_founded", "int"))).dropna()
-        filtered_founding_years = founding_years[countries_of_origin == country_filter_option]
+        founding_years = (pd.Series(get_airline_feature_dict("date_founded", "int"))).dropna() # Remove airlines with no founding year data
+        filtered_founding_years = founding_years[countries_of_origin == country_filter_option] # Ensure only airlines from the selected country are included
         sorted_founding_years = filtered_founding_years.sort_values(ascending=True)
-        plot_bar_graph(sorted_founding_years, "Airline Founding Years", "Founding Year", bottom_ylim=1900)
-
+        plot_bar_graph(sorted_founding_years, "Airline Founding Years", "Founding Year", bottom_ylim=1900) # Set y-axis minimum so years before 1900 since no airlines were founded before then
 # ===================== Hanfu's Hourly Heatmap (same page, matching style) =====================
 # This block lives at the very bottom so it doesn't touch teammates' code above.
 
