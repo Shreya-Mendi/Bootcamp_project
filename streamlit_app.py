@@ -164,9 +164,9 @@ run_rdu = st.button("Fetch RDU Stats")
 
 if run_rdu:
     with st.spinner("Fetching RDU-specific flight data..."):
-        df_departures = fetch_rdu_departures(hours=6)
+        df_departures = fetch_rdu_departures(hours=3)
     
-    st.metric("Departures (last 6h)", len(df_departures))
+    st.metric("Departures (last 3h)", len(df_departures))
 
     if not df_departures.empty:
         # ---- Top Airlines ----
@@ -191,7 +191,7 @@ if run_rdu:
         df_departures["Airline"] = df_departures["callsign"].apply(airline_from_callsign)
         top_airlines = df_departures["Airline"].value_counts().head(10).reset_index()
         top_airlines.columns = ["Airline", "Flights"]
-        st.subheader("🏢 Top 10 Airlines from RDU (last 6h)")
+        st.subheader("🏢 Top 10 Airlines from RDU (last 3h)")
         st.bar_chart(top_airlines.set_index("Airline"))
 
 
