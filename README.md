@@ -27,7 +27,7 @@ This project is an aviation-themed Streamlit application that provides visualiza
 ### 📦 Prerequisites
 
 Before running the app, make sure you have:
-- Python 3.11+ installed (The version of Python this project uses is 3.11.0)
+- Python 3.11+ installed (The version of Python this project uses is 3.13.5)
 - Access to the internet (to fetch live OpenSky API data) pip package manager
 - Access to an aviationstack API key
 
@@ -55,17 +55,21 @@ cd Bootcamp_project/
 
 
 ### 📂 Project Structure
+├── src/
+│   ├── cli_demo.py # Fetches flight snapshot from OpenSky API and airline data from  aviationstack API
+│   └── streamlit_app.py  # Streamlit application
+
+├── .gitattributes # How Git should treat files
+
 ├── .gitignore # Files to ignore
 
 ├── airplane.jpg # Airplane picture in README
 
-├── cli_demo.py           # Fetches flight snapshot from OpenSky API and airline data from aviationstack API
+├── Dockerfile # Set up environment and dependencies for deployment
 
-├── README.md             # Project documentation
+├── README.md  # Project documentation
 
-├── requirements.txt      # Python dependencies
-
-└── streamlit_app.py      # Streamlit application
+└── requirements.txt  # Python dependencies
 
 
 
@@ -74,7 +78,7 @@ cd Bootcamp_project/
 ### Run locally
 
 Start the Streamlit app:
-streamlit run streamlit_app.py
+streamlit run src/streamlit_app.py
 This will open a browser window at http://localhost:8501.
 
 ### Example Workflow
@@ -99,9 +103,9 @@ Top 30 countries by active flights (bar chart)
 
 ### Run cli_demo.py
 
-python cli_demo.py (Windows PowerShell)
+python src/cli_demo.py (Windows PowerShell)
 
-python3 clit_demo.py (MacOS/Linux)
+python3 src/cli_demo.py (MacOS/Linux)
 
 
 ## ⚠️ Notes & Limitations
