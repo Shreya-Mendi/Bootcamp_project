@@ -1,12 +1,16 @@
 🌍 Global Flight Snapshot (via OpenSky Network)
 
-This project is a Streamlit dashboard that visualizes live aircraft data from the OpenSky Network API.
-It fetches a real-time snapshot of active flights (~1,800 aircraft globally) and displays:
+This project is a Streamlit dashboard that visualizes live aircraft data from the OpenSky Network API. It fetches a real-time snapshot of active flights (~1,800 aircraft globally) and displays:
+
 Number of active flights
+
 Top 30 countries by active flights (bar chart)
+
 Scatter map of global flight positions
 
 Top 10 Airlines departed from RDU in the last 6 hours
+
+Airline Profile Comparison (provides profile comparisons of various airlines based on data fetched from the AviationStack API)
 
 
 📦 Prerequisites
@@ -57,17 +61,18 @@ streamlit run streamlit_app.py
 This will open a browser window at http://localhost:8501.
 
 Example Workflow
+
 Click "Fetch Live Flights"
 View:
 Total number of flights in the snapshot
 Top 30 countries by active flights (bar chart)
 Global scatter map of flight positions
 
-
-
-Click "Fetch RDU Data"
-View:
+Click "Fetch RDU Data" View:
 Bar Graph of Top 10 Airlines from RDU
+
+Scroll Down To "Airline Profile Comparison"
+Choose the type of profile comparison you would like to see (fleet size, fleet average age, and founding year) and pick a country of origin to filter by (select "All Countries" if you do not want to filter by a specific country). View: Bar graph representing profile comparison only with the airlines that align with the country of origin filter
 
 
 ⚠️ Notes & Limitations
