@@ -16,7 +16,7 @@ Airline Profile Comparison (provides profile comparisons of various airlines bas
 📦 Prerequisites
 
 Before running the app, make sure you have:
-Python 3.8+ installed
+Python 3.11+ installed (The version of Python this project uses is 3.11.0)
 Access to the internet (to fetch live OpenSky API data)
 pip package manager
 
@@ -73,6 +73,11 @@ Bar Graph of Top 10 Airlines from RDU
 
 Scroll Down To "Airline Profile Comparison"
 Choose the type of profile comparison you would like to see (fleet size, fleet average age, and founding year) and pick a country of origin to filter by (select "All Countries" if you do not want to filter by a specific country). View: Bar graph representing profile comparison only with the airlines that align with the country of origin filter
+
+Run cli_demo.py
+
+python cli_demo.py (Windows PowerShell)
+python3 clit_demo.py (MacOS/Linux)
 
 
 ⚠️ Notes & Limitations
