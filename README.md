@@ -88,7 +88,9 @@ Top 30 countries by active flights (bar chart)
 
 - Pick a country of origin to filter by (select "All Countries" if you do not want to filter by a specific country)
 
-- <u>View:</u> Bar graph representing profile comparison only with the airlines that align with the country of origin filter
+- <u>View ("All Countries" Option):</u> Bar graph representing profile comparison only with the top 10 largest airlines (if the fleet size option is selected), top 10 youngest airlines (if the fleet average age size is selected), top 10 oldest airlines by founding year (if the founding year option is selected)
+
+- <u>View (Not "All Countries" Option):</u> Bar graph representing profile comparison with all the airlines that align with the country of origin filter
 
 ### Run cli_demo.py
 
