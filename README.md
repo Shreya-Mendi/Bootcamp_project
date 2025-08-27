@@ -55,7 +55,7 @@ cd Bootcamp_project/
 
 
 ### 📂 Project Structure
-├── fetchapi.py           # Fetches flight snapshot from OpenSky API and airline data from aviationstack API
+├── cli_demo.py           # Fetches flight snapshot from OpenSky API and airline data from aviationstack API
 
 ├── streamlit_app.py      # Streamlit application
 

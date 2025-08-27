@@ -6,7 +6,7 @@ import os, sys; sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-from fetchapi import fetch_opensky_snapshot, fetch_rdu_departures, fetch_aviation_API_airlines_endpoint
+from cli_demo import fetch_opensky_snapshot, fetch_rdu_departures, fetch_aviation_API_airlines_endpoint
 import pandas as pd
 
 st.set_page_config(page_title="Flight Volume by Country (OpenSky)", layout="wide")
