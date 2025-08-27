@@ -77,6 +77,7 @@ Choose the type of profile comparison you would like to see (fleet size, fleet a
 Run cli_demo.py
 
 python cli_demo.py (Windows PowerShell)
+
 python3 clit_demo.py (MacOS/Linux)
 
 
@@ -98,3 +99,8 @@ Snapshot is limited to ~1800 flights by the free tier
 
 Global Flight Positions (Scatter Map)
 A scatter plot of aircraft positions by latitude/longitude.
+
+
+![Skyline Image](airplane.jpg)
+
+Photo by <a href="https://unsplash.com/@artturijalli?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Artturi Jalli</a> on <a href="https://unsplash.com/photos/white-airplane-under-blue-sky-during-daytime-Su1gc1A63xE?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
