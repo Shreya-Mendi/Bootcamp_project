@@ -294,129 +294,129 @@ else:
         filtered_founding_years = founding_years[countries_of_origin == country_filter_option] # Ensure only airlines from the selected country are included
         sorted_founding_years = filtered_founding_years.sort_values(ascending=True)
         plot_bar_graph(sorted_founding_years, "Airline Founding Years", "Founding Year", bottom_ylim=1900) # Set y-axis minimum so years before 1900 since no airlines were founded before then
-# ===================== Hanfu's Hourly Heatmap (same page, matching style) =====================
-# This block lives at the very bottom so it doesn't touch teammates' code above.
+# # ===================== Hanfu's Hourly Heatmap (same page, matching style) =====================
+# # This block lives at the very bottom so it doesn't touch teammates' code above.
 
-import pandas as pd
-import matplotlib.pyplot as plt
-from rdu_hourly import hourly_counts_for_day  # local import only for this section
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# from rdu_hourly import hourly_counts_for_day  # local import only for this section
 
-# st.header("🗺️ Airport Hourly Heatmap")
+# # st.header("🗺️ Airport Hourly Heatmap")
 
-# Controls grouped to match page style
-col1, col2, col3 = st.columns([1, 1, 1.2])
-with col1:
-    # ICAO code input (e.g., KRDU / KJFK / KLAX)
-    icao_input = st.text_input("Airport ICAO", value="KRDU")
-with col2:
-    # IANA timezone used to define the local 'day' for hourly aggregation
-    tz_input = st.text_input("Time zone (IANA)", value="America/New_York")
-with col3:
-    # Default to 'yesterday' because OpenSky arrivals/departures are updated nightly
-    _yesterday = (pd.Timestamp.now("America/New_York") - pd.Timedelta(days=1)).date()
-    date_input = st.date_input("Local date", value=_yesterday)
+# # Controls grouped to match page style
+# col1, col2, col3 = st.columns([1, 1, 1.2])
+# with col1:
+#     # ICAO code input (e.g., KRDU / KJFK / KLAX)
+#     icao_input = st.text_input("Airport ICAO", value="KRDU")
+# with col2:
+#     # IANA timezone used to define the local 'day' for hourly aggregation
+#     tz_input = st.text_input("Time zone (IANA)", value="America/New_York")
+# with col3:
+#     # Default to 'yesterday' because OpenSky arrivals/departures are updated nightly
+#     _yesterday = (pd.Timestamp.now("America/New_York") - pd.Timedelta(days=1)).date()
+#     date_input = st.date_input("Local date", value=_yesterday)
 
-# Keep button wording consistent with the page style ("Fetch …")
-go_heatmap = st.button("Fetch Heatmap")
+# # Keep button wording consistent with the page style ("Fetch …")
+# go_heatmap = st.button("Fetch Heatmap")
 
-# When not triggered, show an info line just like other sections
-if not go_heatmap:
-    st.info("Click 'Fetch Heatmap' to compute hourly arrivals/departures.")
-else:
-    # If user selected 'today', auto-switch to 'yesterday' (OpenSky batches previous day)
-    _today_local = pd.Timestamp.now(tz_input).date()
-    _use_date = date_input
-    if date_input == _today_local:
-        st.info("OpenSky arrivals/departures are updated nightly. Using yesterday instead of today.")
-        _use_date = (_today_local - pd.Timedelta(days=1))
+# # When not triggered, show an info line just like other sections
+# if not go_heatmap:
+#     st.info("Click 'Fetch Heatmap' to compute hourly arrivals/departures.")
+# else:
+#     # If user selected 'today', auto-switch to 'yesterday' (OpenSky batches previous day)
+#     _today_local = pd.Timestamp.now(tz_input).date()
+#     _use_date = date_input
+#     if date_input == _today_local:
+#         st.info("OpenSky arrivals/departures are updated nightly. Using yesterday instead of today.")
+#         _use_date = (_today_local - pd.Timedelta(days=1))
 
-    try:
-        # Fetch hourly arrivals/departures for the airport on the local date we determined
-        df_hourly = hourly_counts_for_day(icao_input, tz_input, pd.Timestamp(_use_date))
-    except Exception as e:
-        # Surface any API/auth/timezone errors
-        st.error(f"Failed to fetch: {type(e).__name__}: {e}")
-        st.stop()
+#     try:
+#         # Fetch hourly arrivals/departures for the airport on the local date we determined
+#         df_hourly = hourly_counts_for_day(icao_input, tz_input, pd.Timestamp(_use_date))
+#     except Exception as e:
+#         # Surface any API/auth/timezone errors
+#         st.error(f"Failed to fetch: {type(e).__name__}: {e}")
+#         st.stop()
 
-    # If still all zeros, give a helpful hint (small airports / rate limits / batch delay)
-    if int(df_hourly["arrivals"].sum()) == 0 and int(df_hourly["departures"].sum()) == 0:
-        st.warning("OpenSky returned no flights for that airport/date. Try a larger airport (e.g., KJFK, KLAX) "
-                   "or an earlier date (previous days).")
+#     # If still all zeros, give a helpful hint (small airports / rate limits / batch delay)
+#     if int(df_hourly["arrivals"].sum()) == 0 and int(df_hourly["departures"].sum()) == 0:
+#         st.warning("OpenSky returned no flights for that airport/date. Try a larger airport (e.g., KJFK, KLAX) "
+#                    "or an earlier date (previous days).")
 
-    # Summary metrics
-    total_arrivals = int(df_hourly["arrivals"].sum())
-    total_departures = int(df_hourly["departures"].sum())
-    c1, c2 = st.columns(2)
-    c1.metric("Arrivals (day total)", total_arrivals)
-    c2.metric("Departures (day total)", total_departures)
+#     # Summary metrics
+#     total_arrivals = int(df_hourly["arrivals"].sum())
+#     total_departures = int(df_hourly["departures"].sum())
+#     c1, c2 = st.columns(2)
+#     c1.metric("Arrivals (day total)", total_arrivals)
+#     c2.metric("Departures (day total)", total_departures)
 
-    # Show raw hourly table
-    st.dataframe(df_hourly, use_container_width=True)
+#     # Show raw hourly table
+#     st.dataframe(df_hourly, use_container_width=True)
 
-    # Heatmap (2 rows: departures & arrivals; columns: 0..23 local hours)
-    matrix = [df_hourly["departures"].tolist(), df_hourly["arrivals"].tolist()]
-    fig, ax = plt.subplots(figsize=(10, 2.6))
-    im = ax.imshow(matrix, aspect="auto")
-    ax.set_yticks([0, 1], labels=["Departures", "Arrivals"])
-    ax.set_xticks(range(24))
-    ax.set_xlabel("Hour (local)")
-# ax.set_title(f"{icao_input.upper()} Hourly Heatmap — {_use_date} ({tz_input})")
-    plt.colorbar(im, ax=ax, shrink=0.8)
-    st.pyplot(fig)
+#     # Heatmap (2 rows: departures & arrivals; columns: 0..23 local hours)
+#     matrix = [df_hourly["departures"].tolist(), df_hourly["arrivals"].tolist()]
+#     fig, ax = plt.subplots(figsize=(10, 2.6))
+#     im = ax.imshow(matrix, aspect="auto")
+#     ax.set_yticks([0, 1], labels=["Departures", "Arrivals"])
+#     ax.set_xticks(range(24))
+#     ax.set_xlabel("Hour (local)")
+# # ax.set_title(f"{icao_input.upper()} Hourly Heatmap — {_use_date} ({tz_input})")
+#     plt.colorbar(im, ax=ax, shrink=0.8)
+#     st.pyplot(fig)
 
-    # Departures bar chart
-    fig2, ax2 = plt.subplots(figsize=(10, 3))
-    ax2.bar(df_hourly["hour"], df_hourly["departures"])
-    ax2.set_title("Departures by Hour")
-    ax2.set_xlabel("Hour (local)")
-    ax2.set_ylabel("Flights")
-    st.pyplot(fig2)
+#     # Departures bar chart
+#     fig2, ax2 = plt.subplots(figsize=(10, 3))
+#     ax2.bar(df_hourly["hour"], df_hourly["departures"])
+#     ax2.set_title("Departures by Hour")
+#     ax2.set_xlabel("Hour (local)")
+#     ax2.set_ylabel("Flights")
+#     st.pyplot(fig2)
 
-    # Arrivals bar chart
-    fig3, ax3 = plt.subplots(figsize=(10, 3))
-    ax3.bar(df_hourly["hour"], df_hourly["arrivals"])
-    ax3.set_title("Arrivals by Hour")
-    ax3.set_xlabel("Hour (local)")
-    ax3.set_ylabel("Flights")
-    st.pyplot(fig3)
+#     # Arrivals bar chart
+#     fig3, ax3 = plt.subplots(figsize=(10, 3))
+#     ax3.bar(df_hourly["hour"], df_hourly["arrivals"])
+#     ax3.set_title("Arrivals by Hour")
+#     ax3.set_xlabel("Hour (local)")
+#     ax3.set_ylabel("Flights")
+#     st.pyplot(fig3)
 
-    # Small note about OpenSky batch behavior (kept low-key to match page tone)
-    st.caption("Note: OpenSky arrivals/departures are updated nightly. Yesterday or earlier dates work best.")
-# ===================== End Hanfu's Hourly Heatmap =====================
-# =====================
+#     # Small note about OpenSky batch behavior (kept low-key to match page tone)
+#     st.caption("Note: OpenSky arrivals/departures are updated nightly. Yesterday or earlier dates work best.")
+# # ===================== End Hanfu's Hourly Heatmap =====================
+# # =====================
 
 
-# ===================== Demo: Synthetic Multi-Day Table (no API) =====================
-# This section generates realistic-looking hourly arrivals/departures for multiple dates
-# and shows them in a table on the SAME page. It does NOT call any external API.
+# # ===================== Demo: Synthetic Multi-Day Table (no API) =====================
+# # This section generates realistic-looking hourly arrivals/departures for multiple dates
+# # and shows them in a table on the SAME page. It does NOT call any external API.
 
-import pandas as pd
-from demo_mock import gen_demo_hourly_multi_days
+# import pandas as pd
+# from demo_mock import gen_demo_hourly_multi_days
 
-st.header("📅 Demo: Multi-Day Hourly Table (Synthetic)")
+# st.header("📅 Demo: Multi-Day Hourly Table (Synthetic)")
 
-# Inputs
-colA, colB, colC, colD = st.columns([1.1, 1.2, 1, 1])
-with colA:
-    demo_icao = st.text_input("Airport ICAO (demo)", value="KRDU")
-with colB:
-    demo_tz = st.text_input("Time zone (IANA, demo)", value="America/New_York")
-with colC:
-    demo_start = st.date_input("Start date (demo)", value=(pd.Timestamp.now("America/New_York") - pd.Timedelta(days=3)).date())
-with colD:
-    demo_days = st.slider("Days", min_value=2, max_value=7, value=3, step=1)
+# # Inputs
+# colA, colB, colC, colD = st.columns([1.1, 1.2, 1, 1])
+# with colA:
+#     demo_icao = st.text_input("Airport ICAO (demo)", value="KRDU")
+# with colB:
+#     demo_tz = st.text_input("Time zone (IANA, demo)", value="America/New_York")
+# with colC:
+#     demo_start = st.date_input("Start date (demo)", value=(pd.Timestamp.now("America/New_York") - pd.Timedelta(days=3)).date())
+# with colD:
+#     demo_days = st.slider("Days", min_value=2, max_value=7, value=3, step=1)
 
-if st.button("Generate Demo Data"):
-    # Build multi-day synthetic table
-    df_demo = gen_demo_hourly_multi_days(demo_icao, demo_tz, pd.Timestamp(demo_start), demo_days)
-    st.subheader("Demo Hourly Table")
-    st.dataframe(df_demo, use_container_width=True)
+# if st.button("Generate Demo Data"):
+#     # Build multi-day synthetic table
+#     df_demo = gen_demo_hourly_multi_days(demo_icao, demo_tz, pd.Timestamp(demo_start), demo_days)
+#     st.subheader("Demo Hourly Table")
+#     st.dataframe(df_demo, use_container_width=True)
 
-    # Per-day totals
-    totals = df_demo.groupby("date")[["arrivals","departures"]].sum().reset_index()
-    st.subheader("Per-day Totals (Demo)")
-    st.dataframe(totals, use_container_width=True)
+#     # Per-day totals
+#     totals = df_demo.groupby("date")[["arrivals","departures"]].sum().reset_index()
+#     st.subheader("Per-day Totals (Demo)")
+#     st.dataframe(totals, use_container_width=True)
 
-    # Small note
-    st.caption("This is synthetic data for demo only. It does not use any API and is designed for reasonable realism.")
-# ===================== End Demo: Synthetic Multi-Day Table =====================
+#     # Small note
+#     st.caption("This is synthetic data for demo only. It does not use any API and is designed for reasonable realism.")
+# # ===================== End Demo: Synthetic Multi-Day Table =====================
