@@ -125,5 +125,4 @@ Snapshot (limited to ~1800 flights by the free tier) and the aviationstack API (
 👉 View on Hugging Face Spaces:
 🔗 https://huggingface.co/spaces/ShreyaMendi/Skyline 
 
-![Skyline Image](airplane.jpg)
-Photo by <a href="https://unsplash.com/@artturijalli?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Artturi Jalli</a> on <a href="https://unsplash.com/photos/white-airplane-under-blue-sky-during-daytime-Su1gc1A63xE?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
+![Skyline Image](https://static1.simpleflyingimages.com/wordpress/wp-content/uploads/2025/08/shutterstock_1606406629-1.jpg?q=49&fit=crop&w=1100&h=618&dpr=2)
