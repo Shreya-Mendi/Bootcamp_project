@@ -63,8 +63,6 @@ cd Bootcamp_project/
 
 ├── .gitignore # Files to ignore
 
-├── airplane.jpg # Airplane picture in README
-
 ├── Dockerfile # Set up environment and dependencies for deployment
 
 ├── README.md  # Project documentation
